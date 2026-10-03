@@ -5,225 +5,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ranking dos Amigos</title>
 <style>
-:root{--bg:#faf8f4;--card:#fff;--tx:#1f2430;--mu:#6b7280;--ac:#e8590c;--ac2:#fff1e6;--bd:#e5e1d8;--wr:#b45309;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--card:#1f232b;--tx:#eef0f4;--mu:#9aa1ad;--ac:#ff8a4c;--ac2:#33261c;--bd:#2f3440;--wr:#fbbf24}}
-:root[data-theme="dark"]{--bg:#15171c;--card:#1f232b;--tx:#eef0f4;--mu:#9aa1ad;--ac:#ff8a4c;--ac2:#33261c;--bd:#2f3440;--wr:#fbbf24}
+:root{--bg:#faf8f4;--card:#fff;--tx:#1f2430;--mu:#6b7280;--ac:#e8590c;--ac2:#fff1e6;--bd:#e5e1d8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--card:#1f232b;--tx:#eef0f4;--mu:#9aa1ad;--ac:#ff8a4c;--ac2:#33261c;--bd:#2f3440}}
+:root[data-theme="dark"]{--bg:#15171c;--card:#1f232b;--tx:#eef0f4;--mu:#9aa1ad;--ac:#ff8a4c;--ac2:#33261c;--bd:#2f3440}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
 h1{font-size:26px;margin:0 0 4px}h2{font-size:18px;margin:0 0 10px}
-.s{color:var(--mu);margin:0 0 18px}
+p.s{color:var(--mu);margin:0 0 18px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
 input,textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;margin:4px 0 12px}
 label{font-size:14px;color:var(--mu)}
-button,a.btn{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;text-decoration:none;display:inline-block}
-button.p,a.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
 button:disabled{opacity:.45;cursor:default}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border-radius:999px;padding:7px 14px}
 .chip.on{background:var(--ac2);border-color:var(--ac);color:var(--ac)}
 .row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)}
 .row:last-child{border:0}
-.pos{width:34px;font-weight:700;color:var(--ac);font-size:18px}
+.pos{width:28px;font-weight:700;color:var(--ac)}
 .nm{flex:1}
 .bar{height:10px;border-radius:6px;background:var(--ac);margin-top:4px;min-width:3px}
 .mu{color:var(--mu);font-size:14px}
-.wr{color:var(--wr);font-size:14px;margin:4px 0}
-.hid{display:none}
+.med{font-size:20px;width:30px}
 </style>
 </head>
 <body>
-<main>
-<h1 id="ttl">🏆 Ranking dos Amigos</h1>
-<p class="s" id="sub"></p>
-<div class="chips" style="margin-bottom:16px">
-  <button class="chip" id="b-vote" onclick="go('vote')">Votar</button>
-  <button class="chip" id="b-res" onclick="go('res')">Resultado (dono)</button>
-  <button class="chip" id="b-new" onclick="go('new')">Criar ranking</button>
-</div>
-
-<section id="p-vote"></section>
-
-<section id="p-res" class="hid">
-  <div class="card">
-    <label>Votos colados do WhatsApp</label>
-    <textarea id="v" rows="12" placeholder="Ana&#10;1. João&#10;2. Maria&#10;3. Pedro&#10;&#10;Carlos&#10;1. Maria&#10;2. João"></textarea>
-    <p class="mu" style="margin:0">Cole as mensagens do grupo. Cada voto tem o nome de quem votou e as escolhas numeradas, uma por linha.</p>
-  </div>
-  <div id="out"></div>
-</section>
-
-<section id="p-new" class="hid">
-  <div class="card">
-    <h2>Criar ranking</h2>
-    <label>Título</label>
-    <input id="t" placeholder="Ex: Melhor jogador do grupo">
-    <label>Opções (uma por linha)</label>
-    <textarea id="it" rows="8" placeholder="João&#10;Maria&#10;Pedro"></textarea>
-    <label>Quantos itens cada um escolhe?</label>
-    <input id="n" type="number" min="1" max="30" value="5">
-    <button class="p" onclick="makeLink()">Gerar link para os amigos</button>
-    <div id="lk" style="margin-top:14px"></div>
-  </div>
-  <p class="mu">Esqueceu alguém? Corrija a lista aqui e gere um link novo. Os votos que já chegaram no grupo continuam valendo.</p>
-</section>
-
+<main id="app"><p class="mu">Carregando…</p></main>
 <script>
-const $=id=>document.getElementById(id);
+let db=null,me=null,isOwner=false,cfg=null,votes=[],picks=[],myName="",loaded=false,saved=false,tab="vote",editing=false,draft=null,myItem=null;
+const $=s=>document.querySelector(s);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const norm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
 const medals=["🥇","🥈","🥉"];
-let cfg=null,picks=[],myItem=null,myName="",tab="vote",lastText="";
 
-/* ---------- configuração guardada no link (#c=...) ---------- */
-function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))));}
-function dec(s){return JSON.parse(decodeURIComponent(escape(atob(s))));}
-function loadCfg(){
-  try{
-    const m=location.hash.match(/c=([^&]+)/);
-    if(m){const c=dec(decodeURIComponent(m[1]));if(c&&c.items&&c.items.length>1){cfg={title:String(c.title||"Ranking"),items:c.items.map(String),topN:Math.max(1,Math.min(+c.topN||5,c.items.length))};return;}}
-  }catch(e){}
-  cfg=null;
+function scores(){
+  const N=cfg.topN,t={};cfg.items.forEach(i=>t[i]={pts:0,v:0});
+  votes.forEach(v=>(v.picks||[]).forEach((it,i)=>{if(t[it]&&it!==v.me){t[it].pts+=N-i;t[it].v++;}}));
+  return Object.entries(t).sort((a,b)=>b[1].pts-a[1].pts||b[1].v-a[1].v).map(([n,o])=>({n,...o}));
 }
 
-function go(t){
-  tab=t;
-  ["vote","res","new"].forEach(k=>{$("p-"+k).classList.toggle("hid",k!==t);$("b-"+k).classList.toggle("on",k===t);});
-  if(t==="vote")renderVote();
-  if(t==="res")calc();
-}
-
-function head(){
-  $("ttl").textContent="🏆 "+(cfg?cfg.title:"Ranking dos Amigos");
-  $("sub").textContent=cfg?`Escolha o seu top ${cfg.topN}. Ninguém pode votar em si mesmo.`:"Crie um ranking, mande o link para os amigos e some os votos do grupo.";
-}
-
-/* ---------- votar ---------- */
-function renderVote(){
-  const el=$("p-vote");
-  if(!cfg){el.innerHTML='<div class="card"><p style="margin:0">Nenhum ranking neste link. Abra o link que o dono mandou, ou vá em <b>Criar ranking</b> para fazer o seu.</p></div>';return;}
-  picks=picks.filter(p=>cfg.items.includes(p)&&p!==myItem);
-  const free=cfg.items.filter(i=>!picks.includes(i)&&i!==myItem);
-  const sel=myItem===null?"__":myItem===""?"__none":myItem;
-  let h=`<div class="card"><h2>Quem é você?</h2><p class="mu" style="margin:0 0 8px">Ninguém pode votar em si mesmo: a sua opção some da lista de votação.</p>
-  <select id="who" onchange="setWho(this.value)"><option value="__" disabled ${sel=="__"?"selected":""}>Escolha…</option><option value="__none" ${sel=="__none"?"selected":""}>Não estou na lista</option>${cfg.items.map(i=>`<option value="${esc(i)}" ${sel==i?"selected":""}>${esc(i)}</option>`).join("")}</select>
-  ${myItem===""?`<input id="nm" value="${esc(myName)}" placeholder="Seu nome" oninput="myName=this.value;upd()">`:""}</div>`;
-  if(myItem!==null){
-    h+=`<div class="card"><h2>Sua lista (${picks.length}/${cfg.topN})</h2>`;
-    if(!picks.length)h+='<p class="mu">Toque nas opções abaixo para montar sua lista em ordem.</p>';
-    picks.forEach((p,i)=>{h+=`<div class="row"><span class="pos">${i+1}º</span><span class="nm">${esc(p)}</span>
-      <button ${i==0?"disabled":""} onclick="mv(${i},-1)">↑</button><button ${i==picks.length-1?"disabled":""} onclick="mv(${i},1)">↓</button><button onclick="rm(${i})">✕</button></div>`});
-    h+=`</div><div class="card"><h2>Opções</h2><div class="chips">`;
-    free.forEach(i=>h+=`<button class="chip" ${picks.length>=cfg.topN?"disabled":""} onclick="add(this.dataset.v)" data-v="${esc(i)}">${esc(i)}</button>`);
-    if(!free.length)h+='<span class="mu">Todas escolhidas.</span>';
-    h+=`</div></div><div class="card" id="send"></div>`;
+function render(){
+  const el=$("#app");
+  if(!db){el.innerHTML='<h1>Ranking dos Amigos</h1><p class="s">Abra pelo link compartilhado, já logado no Claude, para participar da votação.</p>';return;}
+  if(!loaded){el.innerHTML='<p class="mu">Carregando…</p>';return;}
+  if(!cfg){
+    el.innerHTML=isOwner?`<h1>Criar ranking</h1><p class="s">Defina o tema e as opções. Depois compartilhe o link com os amigos como <b>Contribuidor</b>.</p>
+    <div class="card"><label>Título</label><input id="t" placeholder="Ex: Melhor time de todos os tempos">
+    <label>Opções (uma por linha)</label><textarea id="it" rows="8" placeholder="Opção 1&#10;Opção 2&#10;Opção 3"></textarea>
+    <label>Quantos itens cada um escolhe?</label><input id="n" type="number" min="1" max="30" value="5">
+    <button class="p" onclick="create()">Criar ranking</button></div>`
+    :'<h1>Ranking dos Amigos</h1><p class="s">O ranking ainda não foi criado. Volte em instantes.</p>';
+    return;
   }
-  const a=document.activeElement&&document.activeElement.id,pos=document.activeElement&&document.activeElement.selectionStart;
+  let h=`<h1>${esc(cfg.title)}</h1><p class="s">Cada amigo escolhe seu top ${cfg.topN}. O ranking geral soma os pontos de todos. ${votes.length} voto(s) até agora.</p>
+  <div class="chips" style="margin-bottom:16px"><button class="chip ${tab=="vote"?"on":""}" onclick="tab='vote';render()">Meu voto</button><button class="chip ${tab=="res"?"on":""}" onclick="tab='res';render()">Ranking geral</button>${isOwner?'<button class="chip" onclick="startEdit()">✏️ Editar opções</button>':""}</div>`;
+  if(editing){
+    h+=`<div class="card"><h2>Editar ranking</h2><label>Título</label><input id="e1" value="${esc(draft.t)}" oninput="draft.t=this.value">
+    <label>Opções (uma por linha, pode acrescentar quem faltou)</label><textarea id="e2" rows="10" oninput="draft.it=this.value">${esc(draft.it)}</textarea>
+    <label>Quantos itens cada um escolhe?</label><input id="e3" type="number" min="1" max="30" value="${esc(draft.n)}" oninput="draft.n=this.value">
+    <p class="mu">Os votos já enviados são mantidos. Se você remover uma opção, ela deixa de contar nos pontos.</p>
+    <button class="p" onclick="saveEdit()">Salvar alterações</button> <button onclick="editing=false;render()">Cancelar</button></div>`;
+  }else if(tab=="vote"){
+    picks=picks.filter(p=>cfg.items.includes(p)&&p!==myItem);
+    const free=cfg.items.filter(i=>!picks.includes(i)&&i!==myItem);
+    const sel=myItem===null?"__":myItem===""?"__none":myItem;
+    h+=`<div class="card"><h2>Quem é você?</h2><p class="mu" style="margin:0 0 8px">Ninguém pode votar em si mesmo: a sua opção some da lista de votação.</p>
+    <select id="who" onchange="setWho(this.value)"><option value="__" disabled ${sel=="__"?"selected":""}>Escolha…</option><option value="__none" ${sel=="__none"?"selected":""}>Não estou na lista</option>${cfg.items.map(i=>`<option value="${esc(i)}" ${sel==i?"selected":""}>${esc(i)}</option>`).join("")}</select>
+    ${myItem===""?`<input id="nm" value="${esc(myName)}" placeholder="Seu nome" oninput="myName=this.value">`:""}</div>`;
+    if(myItem!==null){
+      const ready=picks.length&&(myItem!==""||myName.trim());
+      h+=`<div class="card"><h2>Sua lista (${picks.length}/${cfg.topN})</h2>`;
+      if(!picks.length)h+='<p class="mu">Toque nas opções abaixo para montar sua lista em ordem.</p>';
+      picks.forEach((p,i)=>{h+=`<div class="row"><span class="pos">${i+1}º</span><span class="nm">${esc(p)}</span>
+        <button ${i==0?"disabled":""} onclick="mv(${i},-1)">↑</button><button ${i==picks.length-1?"disabled":""} onclick="mv(${i},1)">↓</button><button onclick="rm(${i})">✕</button></div>`});
+      h+=`</div><div class="card"><h2>Opções</h2><div class="chips">`;
+      free.forEach(i=>h+=`<button class="chip" ${picks.length>=cfg.topN?"disabled":""} onclick="add(this.dataset.v)" data-v="${esc(i)}">${esc(i)}</button>`);
+      if(!free.length)h+='<span class="mu">Todas escolhidas.</span>';
+      h+=`</div></div><div class="card"><button class="p" ${ready?"":"disabled"} onclick="save()">${saved?"Atualizar meu voto":"Enviar meu voto"}</button> ${saved?'<span class="mu">✓ voto salvo</span>':""}</div>`;
+    }
+  }else{
+    const s=scores(),max=Math.max(1,...s.map(x=>x.pts));
+    h+='<div class="card">';
+    s.forEach((x,i)=>{h+=`<div class="row"><span class="${i<3?"med":"pos"}">${i<3&&x.pts?medals[i]:i+1+"º"}</span><span class="nm">${esc(x.n)}<div class="bar" style="width:${x.pts/max*100}%"></div></span><span class="mu">${x.pts} pts · ${x.v} voto(s)</span></div>`});
+    h+='</div><div class="card"><h2>Quem já votou</h2><p class="mu">'+(votes.length?votes.map(v=>esc(v.name||"Anônimo")).join(", "):"Ninguém ainda.")+'</p></div>';
+  }
+  const act=document.activeElement&&document.activeElement.id,pos=document.activeElement&&document.activeElement.selectionStart;
   el.innerHTML=h;
-  if(a){const e=$(a);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(_){}}}
-  upd();
-}
-function voterName(){return myItem||(myName||"").trim();}
-function msg(){return voterName()+"\n"+picks.map((p,i)=>`${i+1}. ${p}`).join("\n");}
-function upd(){
-  const s=$("send");if(!s)return;
-  const ok=picks.length&&voterName();
-  s.innerHTML=ok?`<h2>Mande seu voto no grupo</h2><textarea id="m" rows="${picks.length+2}" readonly>${esc(msg())}</textarea>
-  <button class="p" onclick="copyMsg()">Copiar mensagem</button> <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg())}">Abrir no WhatsApp</a> <span id="cm" class="mu"></span>`
-  :'<p class="mu" style="margin:0">Escolha pelo menos um item'+(myItem===""?" e digite seu nome":"")+' para gerar a mensagem de voto.</p>';
-}
-function setWho(v){myItem=v=="__"?null:v=="__none"?"":v;renderVote();}
-function add(v){if(picks.length<cfg.topN&&!picks.includes(v)){picks.push(v);renderVote();}}
-function rm(i){picks.splice(i,1);renderVote();}
-function mv(i,d){const j=i+d;[picks[i],picks[j]]=[picks[j],picks[i]];renderVote();}
-async function copyMsg(){
-  const el=$("cm");
-  try{await navigator.clipboard.writeText(msg());el.textContent="✓ copiado";}
-  catch(e){const m=$("m");m.select();el.textContent="Selecione o texto acima e copie.";}
+  if(act){const e=document.getElementById(act);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(_){}}}
 }
 
-/* ---------- criar ranking ---------- */
-function makeLink(){
-  const title=$("t").value.trim(),items=[...new Set($("it").value.split("\n").map(s=>s.trim()).filter(Boolean))];
-  let n=parseInt($("n").value)||5;
+function setWho(v){myItem=v=="__"?null:v=="__none"?"":v;saved=false;render();}
+function add(v){if(picks.length<cfg.topN&&!picks.includes(v)){picks.push(v);saved=false;render();}}
+function rm(i){picks.splice(i,1);saved=false;render();}
+function mv(i,d){const j=i+d;[picks[i],picks[j]]=[picks[j],picks[i]];saved=false;render();}
+async function save(){
+  try{await db.doc("votes/"+me).set({name:myItem||(myName||"").trim()||"Anônimo",me:myItem,picks:picks.filter(x=>x!==myItem),at:Date.now()});saved=true;render();}
+  catch(e){alert("Não consegui salvar. Peça ao dono do ranking para te dar acesso de Contribuidor.");}
+}
+function startEdit(){draft={t:cfg.title,it:cfg.items.join("\n"),n:cfg.topN};editing=true;render();}
+async function saveEdit(){
+  const title=draft.t.trim(),items=[...new Set(draft.it.split("\n").map(x=>x.trim()).filter(Boolean))];
+  let n=parseInt(draft.n)||5;
   if(!title||items.length<2){alert("Coloque um título e pelo menos 2 opções.");return;}
   n=Math.min(n,items.length);
-  const c={title,items,topN:n};
-  const url=location.href.split("#")[0]+"#c="+encodeURIComponent(enc(c));
-  location.hash="c="+encodeURIComponent(enc(c));
-  loadCfg();head();picks=[];myItem=null;
-  $("lk").innerHTML=`<label>Link para mandar no grupo</label><textarea id="lku" rows="3" readonly>${esc(url)}</textarea>
-  <button class="p" onclick="copyLink()">Copiar link</button> <span id="cl" class="mu"></span>`;
-  try{localStorage.setItem("rc",JSON.stringify({t:title,it:$("it").value,n:$("n").value}));}catch(e){}
+  try{await db.doc("config/main").set({title,items,topN:n});editing=false;render();}catch(e){alert("Erro ao salvar as alterações.");}
 }
-async function copyLink(){
-  const el=$("cl"),u=$("lku");
-  try{await navigator.clipboard.writeText(u.value);el.textContent="✓ copiado";}
-  catch(e){u.select();el.textContent="Selecione o texto e copie.";}
+async function create(){
+  const title=$("#t").value.trim(),items=[...new Set($("#it").value.split("\n").map(s=>s.trim()).filter(Boolean))];
+  let n=parseInt($("#n").value)||5;
+  if(!title||items.length<2){alert("Coloque um título e pelo menos 2 opções.");return;}
+  n=Math.min(n,items.length);
+  try{await db.doc("config/main").set({title,items,topN:n});}catch(e){alert("Erro ao criar o ranking.");}
 }
 
-/* ---------- somar votos ---------- */
-const PRE=/^\[?\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}(:\d{2})?(\s?[AaPp][Mm])?\]?\s*-?\s*/;
-const NUM=/^\s*(\d{1,2})\s*(?:[.)\-–:]|[ºo°]\.?|\s)\s*[-–:]?\s*(.+)$/;
-function parse(text){
-  const voters=[];let cur=null;
-  text.split(/\r?\n/).forEach(raw=>{
-    let line=raw.replace(PRE,"").trim();
-    if(!line||/omitid|omitted|^<.*>$/i.test(line))return;
-    const m0=line.match(/^([^:\d][^:]{0,40}):\s*(.*)$/);
-    if(m0){cur={name:m0[1].trim(),picks:[]};voters.push(cur);line=m0[2].trim();if(!line)return;}
-    const m=line.match(NUM);
-    if(m&&cur){cur.picks.push({pos:+m[1],name:m[2].trim()});return;}
-    if(!m){cur={name:line.replace(/:$/,"").trim(),picks:[]};voters.push(cur);}
-  });
-  return voters.filter(v=>v.picks.length);
-}
-function same(a,b){
-  const x=norm(a),y=norm(b);if(!x||!y)return false;
-  return x===y||x.startsWith(y+" ")||y.startsWith(x+" ");
-}
-function calc(){
-  if(!cfg){$("out").innerHTML='<div class="card"><p class="mu" style="margin:0">Primeiro crie o ranking (ou abra o link dele) para poder somar os votos.</p></div>';return;}
-  const N=cfg.topN,items=cfg.items,byName=new Map();
-  parse($("v").value).forEach(v=>byName.set(norm(v.name),v));
-  const voters=[...byName.values()],warns=[],tot=new Map();
-  items.forEach(i=>tot.set(norm(i),{n:i,pts:0,v:0}));
-  voters.forEach(v=>{
-    const seen=new Set();
-    v.picks.sort((a,b)=>a.pos-b.pos).slice(0,N).forEach((p,i)=>{
-      const hit=items.find(it=>norm(it)===norm(p.name))||items.find(it=>same(it,p.name));
-      if(!hit){warns.push(`${v.name}: "${p.name}" não está na lista (ignorado).`);return;}
-      if(same(v.name,hit)){warns.push(`${v.name} votou em si mesmo (voto ignorado).`);return;}
-      const k=norm(hit);
-      if(seen.has(k)){warns.push(`${v.name} repetiu "${p.name}" (repetição ignorada).`);return;}
-      seen.add(k);
-      const t=tot.get(k);t.pts+=N-i;t.v++;
-    });
-    if(v.picks.length>N)warns.push(`${v.name} mandou mais de ${N} escolhas (só as ${N} primeiras contam).`);
-  });
-  const rank=[...tot.values()].sort((a,b)=>b.pts-a.pts||b.v-a.v||a.n.localeCompare(b.n));
-  lastText=`🏆 ${cfg.title}\n`+rank.filter(r=>r.pts).map((r,i)=>`${i+1}º ${r.n} - ${r.pts} pts`).join("\n")+`\n(${voters.length} votos)`;
-  if(!voters.length){$("out").innerHTML='<div class="card"><p class="mu" style="margin:0">Cole os votos acima e o ranking aparece aqui.</p></div>';return;}
-  const max=Math.max(1,...rank.map(r=>r.pts));
-  let h=`<div class="card"><h2>${esc(cfg.title)}</h2><p class="mu" style="margin:0 0 8px">${voters.length} voto(s) contados. O 1º de cada lista vale ${N} pontos e o último vale 1.</p>`;
-  rank.forEach((r,i)=>{h+=`<div class="row"><span class="pos">${r.pts&&i<3?medals[i]:i+1+"º"}</span><span class="nm">${esc(r.n)}<div class="bar" style="width:${r.pts/max*100}%"></div></span><span class="mu">${r.pts} pts · ${r.v} voto(s)</span></div>`;});
-  h+=`<p style="margin:14px 0 0"><button class="p" onclick="copyRes()">Copiar resultado para o WhatsApp</button> <span id="cp" class="mu"></span></p></div>`;
-  h+=`<div class="card"><h2>Quem votou</h2><p class="mu" style="margin:0">${voters.map(v=>esc(v.name)).join(", ")}</p></div>`;
-  if(warns.length)h+=`<div class="card"><h2>Avisos</h2>${warns.map(w=>`<div class="wr">⚠️ ${esc(w)}</div>`).join("")}</div>`;
-  $("out").innerHTML=h;
-}
-async function copyRes(){
-  const el=$("cp");
-  try{await navigator.clipboard.writeText(lastText);el.textContent="✓ copiado";}
-  catch(e){el.textContent="Não deu para copiar. Selecione e copie o ranking manualmente.";}
-}
-
-/* ---------- início ---------- */
-$("v").addEventListener("input",calc);
-try{const d=JSON.parse(localStorage.getItem("rc")||"null");if(d){$("t").value=d.t||"";$("it").value=d.it||"";$("n").value=d.n||5;}}catch(e){}
-window.addEventListener("hashchange",()=>{loadCfg();head();if(tab==="vote")renderVote();if(tab==="res")calc();});
-loadCfg();head();go(cfg?"vote":"new");
+(async()=>{
+  try{
+    db=await claude.use("db");const user=await claude.use("user");
+    if(!db||!user){render();return;}
+    me=await user.id();isOwner=user.isOwner();
+    db.doc("config/main").onSnapshot(s=>{cfg=s.exists?s.data():null;loaded=true;render();},()=>{loaded=true;render();});
+    db.collection("votes").onSnapshot(q=>{
+      votes=q.docs.map(d=>d.data());
+      const mine=q.docs.find(d=>d.id===me);
+      if(mine&&!saved&&!picks.length){picks=[...(mine.data().picks||[])];myName=mine.data().name||"";myItem=typeof mine.data().me==="string"?mine.data().me:null;saved=true;}
+      render();
+    },()=>{});
+  }catch(e){db=null;render();}
+  render();
+})();
 </script>
-</main>
 </body>
 </html>
