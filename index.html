@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ranking dos Amigos</title>
+<title>Melhor Jogador dos Amigos Capivara 26K</title>
 <style>
 :root{--bg:#faf8f4;--card:#fff;--tx:#1f2430;--mu:#6b7280;--ac:#e8590c;--ac2:#fff1e6;--bd:#e5e1d8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--card:#1f232b;--tx:#eef0f4;--mu:#9aa1ad;--ac:#ff8a4c;--ac2:#33261c;--bd:#2f3440}}
@@ -29,37 +29,61 @@ button:disabled{opacity:.45;cursor:default}
 .bar{height:10px;border-radius:6px;background:var(--ac);margin-top:4px;min-width:3px}
 .mu{color:var(--mu);font-size:14px}
 .med{font-size:20px;width:30px}
+.err{border-color:#dc2626;color:#dc2626}
+code{background:var(--bg);padding:2px 6px;border-radius:6px}
 </style>
 </head>
 <body>
 <main id="app"><p class="mu">Carregando…</p></main>
 <script>
-let db=null,me=null,isOwner=false,cfg=null,votes=[],picks=[],myName="",loaded=false,saved=false,tab="vote",editing=false,draft=null,myItem=null;
-const $=s=>document.querySelector(s);
-const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+/* ============ CONFIGURAÇÃO ============
+   Cole aqui o endereço do seu Firebase Realtime Database, entre aspas.
+   Exemplo: "https://meu-ranking-default-rtdb.firebaseio.com"
+   (veja o README.md para o passo a passo)                                   */
+const FIREBASE_URL="";
+
+/* Opções iniciais do ranking (o dono pode editar depois pelo site, abrindo o link com #dono no final) */
+const DEFAULT_CFG={
+  title:"MELHOR JOGADOR DOS AMIGOS CAPIVARA 26K",
+  items:["Zoro","Zuck","Arnold","Luizote","Biel","Romulo","Cachorro","Higor","Lacay","Brunão","Léo","Jaba","Balkin","Richard","Gordin","Samuca"],
+  topN:5
+};
+/* ====================================== */
+
+const base=FIREBASE_URL.replace(/\/+$/,"");
+const ready=!!base;
+const isOwner=/dono/i.test(location.hash);
 const medals=["🥇","🥈","🥉"];
+let cfg=DEFAULT_CFG,votes=[],picks=[],myItem=null,myName="",saved=false,tab="vote",editing=false,draft=null,err="",restored=false;
+
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const keyOf=n=>encodeURIComponent(String(n).trim().toLowerCase().replace(/[.$#\[\]\/]/g,"_"));
+async function api(path,method,body){
+  const r=await fetch(base+"/"+path+".json",{method:method||"GET",body:body!==undefined?JSON.stringify(body):undefined});
+  if(!r.ok)throw new Error("http "+r.status);
+  return r.json();
+}
+function voterName(){return myItem||(myName||"").trim();}
 
 function scores(){
-  const N=cfg.topN,t={};cfg.items.forEach(i=>t[i]={pts:0,v:0});
-  votes.forEach(v=>(v.picks||[]).forEach((it,i)=>{if(t[it]&&it!==v.me){t[it].pts+=N-i;t[it].v++;}}));
-  return Object.entries(t).sort((a,b)=>b[1].pts-a[1].pts||b[1].v-a[1].v).map(([n,o])=>({n,...o}));
+  const N=+cfg.topN||5,t={};
+  cfg.items.forEach(i=>t[i]={pts:0,v:0});
+  votes.forEach(v=>{
+    const seen=new Set();
+    (v.picks||[]).slice(0,N).forEach((it,i)=>{
+      if(t[it]&&it!==v.me&&!seen.has(it)){seen.add(it);t[it].pts+=N-i;t[it].v++;}
+    });
+  });
+  return Object.entries(t).sort((a,b)=>b[1].pts-a[1].pts||b[1].v-a[1].v||a[0].localeCompare(b[0])).map(([n,o])=>({n,...o}));
 }
 
 function render(){
-  const el=$("#app");
-  if(!db){el.innerHTML='<h1>Ranking dos Amigos</h1><p class="s">Abra pelo link compartilhado, já logado no Claude, para participar da votação.</p>';return;}
-  if(!loaded){el.innerHTML='<p class="mu">Carregando…</p>';return;}
-  if(!cfg){
-    el.innerHTML=isOwner?`<h1>Criar ranking</h1><p class="s">Defina o tema e as opções. Depois compartilhe o link com os amigos como <b>Contribuidor</b>.</p>
-    <div class="card"><label>Título</label><input id="t" placeholder="Ex: Melhor time de todos os tempos">
-    <label>Opções (uma por linha)</label><textarea id="it" rows="8" placeholder="Opção 1&#10;Opção 2&#10;Opção 3"></textarea>
-    <label>Quantos itens cada um escolhe?</label><input id="n" type="number" min="1" max="30" value="5">
-    <button class="p" onclick="create()">Criar ranking</button></div>`
-    :'<h1>Ranking dos Amigos</h1><p class="s">O ranking ainda não foi criado. Volte em instantes.</p>';
-    return;
-  }
-  let h=`<h1>${esc(cfg.title)}</h1><p class="s">Cada amigo escolhe seu top ${cfg.topN}. O ranking geral soma os pontos de todos. ${votes.length} voto(s) até agora.</p>
-  <div class="chips" style="margin-bottom:16px"><button class="chip ${tab=="vote"?"on":""}" onclick="tab='vote';render()">Meu voto</button><button class="chip ${tab=="res"?"on":""}" onclick="tab='res';render()">Ranking geral</button>${isOwner?'<button class="chip" onclick="startEdit()">✏️ Editar opções</button>':""}</div>`;
+  const el=document.getElementById("app");
+  const N=+cfg.topN||5;
+  let h=`<h1>${esc(cfg.title)}</h1><p class="s">Cada amigo escolhe seu top ${N}. O ranking geral soma os pontos de todos. ${votes.length} voto(s) até agora.</p>`;
+  if(!ready)h+=`<div class="card err"><b>Falta configurar o banco de dados.</b><br>Abra o arquivo <code>index.html</code>, cole o endereço do Firebase em <code>FIREBASE_URL</code> e suba de novo. O passo a passo está no README.</div>`;
+  if(err)h+=`<div class="card err">${esc(err)}</div>`;
+  h+=`<div class="chips" style="margin-bottom:16px"><button class="chip ${tab=="vote"&&!editing?"on":""}" onclick="editing=false;tab='vote';render()">Meu voto</button><button class="chip ${tab=="res"&&!editing?"on":""}" onclick="editing=false;tab='res';render()">Ranking geral</button>${isOwner?'<button class="chip" onclick="startEdit()">✏️ Editar opções</button>':""}</div>`;
   if(editing){
     h+=`<div class="card"><h2>Editar ranking</h2><label>Título</label><input id="e1" value="${esc(draft.t)}" oninput="draft.t=this.value">
     <label>Opções (uma por linha, pode acrescentar quem faltou)</label><textarea id="e2" rows="10" oninput="draft.it=this.value">${esc(draft.it)}</textarea>
@@ -72,17 +96,17 @@ function render(){
     const sel=myItem===null?"__":myItem===""?"__none":myItem;
     h+=`<div class="card"><h2>Quem é você?</h2><p class="mu" style="margin:0 0 8px">Ninguém pode votar em si mesmo: a sua opção some da lista de votação.</p>
     <select id="who" onchange="setWho(this.value)"><option value="__" disabled ${sel=="__"?"selected":""}>Escolha…</option><option value="__none" ${sel=="__none"?"selected":""}>Não estou na lista</option>${cfg.items.map(i=>`<option value="${esc(i)}" ${sel==i?"selected":""}>${esc(i)}</option>`).join("")}</select>
-    ${myItem===""?`<input id="nm" value="${esc(myName)}" placeholder="Seu nome" oninput="myName=this.value">`:""}</div>`;
+    ${myItem===""?`<input id="nm" value="${esc(myName)}" placeholder="Seu nome" oninput="myName=this.value;remember()">`:""}</div>`;
     if(myItem!==null){
-      const ready=picks.length&&(myItem!==""||myName.trim());
-      h+=`<div class="card"><h2>Sua lista (${picks.length}/${cfg.topN})</h2>`;
+      const ok=picks.length&&voterName();
+      h+=`<div class="card"><h2>Sua lista (${picks.length}/${N})</h2>`;
       if(!picks.length)h+='<p class="mu">Toque nas opções abaixo para montar sua lista em ordem.</p>';
       picks.forEach((p,i)=>{h+=`<div class="row"><span class="pos">${i+1}º</span><span class="nm">${esc(p)}</span>
         <button ${i==0?"disabled":""} onclick="mv(${i},-1)">↑</button><button ${i==picks.length-1?"disabled":""} onclick="mv(${i},1)">↓</button><button onclick="rm(${i})">✕</button></div>`});
       h+=`</div><div class="card"><h2>Opções</h2><div class="chips">`;
-      free.forEach(i=>h+=`<button class="chip" ${picks.length>=cfg.topN?"disabled":""} onclick="add(this.dataset.v)" data-v="${esc(i)}">${esc(i)}</button>`);
+      free.forEach(i=>h+=`<button class="chip" ${picks.length>=N?"disabled":""} onclick="add(this.dataset.v)" data-v="${esc(i)}">${esc(i)}</button>`);
       if(!free.length)h+='<span class="mu">Todas escolhidas.</span>';
-      h+=`</div></div><div class="card"><button class="p" ${ready?"":"disabled"} onclick="save()">${saved?"Atualizar meu voto":"Enviar meu voto"}</button> ${saved?'<span class="mu">✓ voto salvo</span>':""}</div>`;
+      h+=`</div></div><div class="card"><button class="p" ${ok&&ready?"":"disabled"} onclick="save()">${saved?"Atualizar meu voto":"Enviar meu voto"}</button> ${saved?'<span class="mu">✓ voto salvo</span>':""}</div>`;
     }
   }else{
     const s=scores(),max=Math.max(1,...s.map(x=>x.pts));
@@ -90,18 +114,23 @@ function render(){
     s.forEach((x,i)=>{h+=`<div class="row"><span class="${i<3?"med":"pos"}">${i<3&&x.pts?medals[i]:i+1+"º"}</span><span class="nm">${esc(x.n)}<div class="bar" style="width:${x.pts/max*100}%"></div></span><span class="mu">${x.pts} pts · ${x.v} voto(s)</span></div>`});
     h+='</div><div class="card"><h2>Quem já votou</h2><p class="mu">'+(votes.length?votes.map(v=>esc(v.name||"Anônimo")).join(", "):"Ninguém ainda.")+'</p></div>';
   }
-  const act=document.activeElement&&document.activeElement.id,pos=document.activeElement&&document.activeElement.selectionStart;
+  const a=document.activeElement&&document.activeElement.id,pos=document.activeElement&&document.activeElement.selectionStart;
   el.innerHTML=h;
-  if(act){const e=document.getElementById(act);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(_){}}}
+  if(a){const e=document.getElementById(a);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(_){}}}
 }
 
-function setWho(v){myItem=v=="__"?null:v=="__none"?"":v;saved=false;render();}
-function add(v){if(picks.length<cfg.topN&&!picks.includes(v)){picks.push(v);saved=false;render();}}
+function remember(){try{localStorage.setItem("rk-id",JSON.stringify({item:myItem,name:myName}));}catch(e){}}
+function setWho(v){myItem=v=="__"?null:v=="__none"?"":v;saved=false;remember();render();}
+function add(v){if(picks.length<(+cfg.topN||5)&&!picks.includes(v)){picks.push(v);saved=false;render();}}
 function rm(i){picks.splice(i,1);saved=false;render();}
 function mv(i,d){const j=i+d;[picks[i],picks[j]]=[picks[j],picks[i]];saved=false;render();}
+
 async function save(){
-  try{await db.doc("votes/"+me).set({name:myItem||(myName||"").trim()||"Anônimo",me:myItem,picks:picks.filter(x=>x!==myItem),at:Date.now()});saved=true;render();}
-  catch(e){alert("Não consegui salvar. Peça ao dono do ranking para te dar acesso de Contribuidor.");}
+  const name=voterName();
+  try{
+    await api("votes/"+keyOf(name),"PUT",{name,me:myItem,picks:picks.filter(x=>x!==myItem),at:Date.now()});
+    saved=true;err="";await load();
+  }catch(e){err="Não consegui salvar o voto. Confira o link do Firebase e as regras do banco.";render();}
 }
 function startEdit(){draft={t:cfg.title,it:cfg.items.join("\n"),n:cfg.topN};editing=true;render();}
 async function saveEdit(){
@@ -109,31 +138,34 @@ async function saveEdit(){
   let n=parseInt(draft.n)||5;
   if(!title||items.length<2){alert("Coloque um título e pelo menos 2 opções.");return;}
   n=Math.min(n,items.length);
-  try{await db.doc("config/main").set({title,items,topN:n});editing=false;render();}catch(e){alert("Erro ao salvar as alterações.");}
-}
-async function create(){
-  const title=$("#t").value.trim(),items=[...new Set($("#it").value.split("\n").map(s=>s.trim()).filter(Boolean))];
-  let n=parseInt($("#n").value)||5;
-  if(!title||items.length<2){alert("Coloque um título e pelo menos 2 opções.");return;}
-  n=Math.min(n,items.length);
-  try{await db.doc("config/main").set({title,items,topN:n});}catch(e){alert("Erro ao criar o ranking.");}
+  if(!ready){alert("Configure o Firebase primeiro.");return;}
+  try{await api("config","PUT",{title,items,topN:n});editing=false;err="";await load();}
+  catch(e){alert("Erro ao salvar as alterações.");}
 }
 
-(async()=>{
+async function load(){
+  if(!ready){render();return;}
   try{
-    db=await claude.use("db");const user=await claude.use("user");
-    if(!db||!user){render();return;}
-    me=await user.id();isOwner=user.isOwner();
-    db.doc("config/main").onSnapshot(s=>{cfg=s.exists?s.data():null;loaded=true;render();},()=>{loaded=true;render();});
-    db.collection("votes").onSnapshot(q=>{
-      votes=q.docs.map(d=>d.data());
-      const mine=q.docs.find(d=>d.id===me);
-      if(mine&&!saved&&!picks.length){picks=[...(mine.data().picks||[])];myName=mine.data().name||"";myItem=typeof mine.data().me==="string"?mine.data().me:null;saved=true;}
-      render();
-    },()=>{});
-  }catch(e){db=null;render();}
-  render();
-})();
+    const [c,v]=await Promise.all([api("config"),api("votes")]);
+    if(c&&Array.isArray(c.items)&&c.items.length>1)cfg={title:c.title||DEFAULT_CFG.title,items:c.items,topN:+c.topN||5};
+    votes=v?Object.values(v):[];
+    if(!restored){
+      restored=true;
+      try{
+        const d=JSON.parse(localStorage.getItem("rk-id")||"null");
+        if(d){myItem=typeof d.item==="string"?d.item:null;myName=d.name||"";
+          const mine=votes.find(x=>x.name&&keyOf(x.name)===keyOf(voterName()||"~"));
+          if(mine){picks=[...(mine.picks||[])];saved=true;}}
+      }catch(e){}
+    }
+    err="";
+  }catch(e){err="Não consegui falar com o banco de dados. Confira o link do Firebase.";}
+  if(!editing)render();
+}
+
+render();
+load();
+setInterval(()=>{if(!editing&&!(document.activeElement&&document.activeElement.id==="nm"))load();},6000);
 </script>
 </body>
 </html>
